@@ -226,6 +226,43 @@
   const SUPABASE_KEY = 'sb_publishable_TCj4IljMPd_r9PMn_xLmIQ_ckANVu8H';
   // Esta variable 'supabase' es la que usarás para todo
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
+
+  async function cargarReportes() {
+        const { data, error } = await supabaseClient
+            .from('Bache') // Tu tabla con baches de Oaxaca
+            .select('*');
+
+        if (error) {
+            console.error('Error al cargar:', error);
+            return;
+        }
+
+        const tabla = document.getElementById('tabla-reportes');
+        tabla.innerHTML = ''; // Limpiamos la tabla
+
+        data.forEach(bache => {
+    const fila = document.createElement('tr');
+    // Si quieres ver las coordenadas, accedemos al array de coordinates
+    const coords = bache.Ubicacion ? bache.Ubicacion.coordinates : [0,0];
+    
+    fila.innerHTML = `
+        <td class="py-4 text-dark fw-bold">${bache.Id_bache}</td>
+        <td class="text-muted">Lat: ${coords[1]}, Lon: ${coords[0]}</td>
+        <td>
+            <span class="badge ${bache.Valor_impacto > 7 ? 'bg-danger' : 'bg-warning'}">
+                ${bache.Valor_impacto}
+            </span>
+        </td>
+        <td><button class="btn btn-sm btn-success rounded-pill">Ver Ruta</button></td>
+    `;
+    tabla.appendChild(fila);
+});
+    }
+
+    // Ejecutar la función al cargar la página
+    document.addEventListener('DOMContentLoaded', cargarReportes);
 </script>
 </body>
 
