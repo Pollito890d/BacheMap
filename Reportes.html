@@ -138,13 +138,15 @@
         </div>
 
         <!-- Sección de Gráfico Único Dinámico -->
-        <h4 class="fw-bold mt-5 mb-4 text-dark text-center">Análisis de Reportes por Ruta</h4>
+        <h4 class="fw-bold mt-5 mb-4 text-dark text-center">Análisis de Reportes por Zona</h4>
         <div class="row justify-content-center">
             <div class="col-md-10">
                 <div class="card shadow-sm border-0 rounded-4 p-4" style="background-color: white;">
 
                     <!-- Botones de Control de Tiempo -->
                     <div class="d-flex justify-content-center gap-2 mb-4 flex-wrap">
+                        <button class="btn btn-outline-dark rounded-pill fw-bold"
+                            onclick="updateChart('diario', this)">Diario</button>
                         <button class="btn btn-outline-dark rounded-pill fw-bold active"
                             onclick="updateChart('semanal', this)">Semanal</button>
                         <button class="btn btn-outline-dark rounded-pill fw-bold"
@@ -165,15 +167,15 @@
 
     </div>
 
-    <!-- Script de Chart.js para generar los gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Colores súper vivos (Rojo, Azul, Verde, Naranja)
         const vividColors = ['#FF2A2A', '#007BFF', '#00E640', '#FF9900'];
-        const rutas = ['Ruta Norte', 'Ruta Sur', 'Ruta Centro', 'Ruta Oriente'];
+        const zonas = ['Oaxaca de Juárez', 'Xoxocotlán', 'Santa Lucía', 'Zaachila'];
 
         // Datos para cada periodo de tiempo
         const chartData = {
+            diario: [2, 1, 0, 1],
             semanal: [5, 8, 3, 6],
             mensual: [25, 38, 15, 30],
             trimestral: [80, 120, 45, 95],
@@ -185,7 +187,7 @@
         let myChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: rutas,
+                labels: zonas,
                 datasets: [{
                     label: 'Reportes',
                     data: chartData.semanal,
