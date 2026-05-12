@@ -2,6 +2,8 @@
 <html lang="es">
 
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config-supabase.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BacheMap - Notificaciones en Tiempo Real</title>
@@ -321,6 +323,12 @@
             feed.prepend(newNotif);
         }, 6000);
     </script>
+    <script>
+  const SUPABASE_URL = 'https://muhpuwittgecylwtixku.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_TCj4IljMPd_r9PMn_xLmIQ_ckANVu8H';
+  // Esta variable 'supabase' es la que usarás para todo
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 
 </body>
 

@@ -2,6 +2,8 @@
 <html lang="es">
 
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config-supabase.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión</title>
@@ -120,7 +122,7 @@
 
         <h2>BacheMap</h2>
 
-        <form action="Principal.html" method="GET">
+        <form id="loginForm">
             <div class="form-group">
                 <label for="username">Usuario:</label>
                 <input type="text" id="username" name="username">
@@ -136,6 +138,61 @@
         </form>
 
     </div>
+    <script>
+  // 1. Configuración (URL corregida sin el /rest/v1/)
+  const SUPABASE_URL = 'https://muhpuwittgecylwtixku.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_TCj4IljMPd_r9PMn_xLmIQ_ckANVu8H'; // Asegúrate de que sea la 'anon public'
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // 2. Capturamos el formulario
+  const loginForm = document.querySelector('form');
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault(); // DETIENE el envío automático a Principal.html
+
+    const email = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    console.log("Intentando iniciar sesión para:", email);
+
+    // 3. Autenticación con Supabase
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    if (error) {
+      alert("Error en el acceso: " + error.message);
+    } else {
+      alert("¡Acceso correcto! Cargando BacheMap...");
+      // 4. Si todo está bien, AHORA SÍ lo mandamos a la otra página
+      window.location.href = 'Principal.html';
+    }
+  });
+
+  const form = document.getElementById('loginForm');
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault(); // <--- ¡ESTA LÍNEA ES EL FRENO! 
+    
+    const email = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    if (error) {
+      // Si hay error (contraseña mal), se queda aquí y avisa
+      alert("Error: " + error.message);
+    } else {
+      // Si Supabase dice que todo OK, entonces nosotros lo mandamos
+      alert("¡Bienvenido a BacheMap!");
+      window.location.href = 'Principal.html';
+    }
+  });
+</script>
 
 </body>
 
