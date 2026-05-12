@@ -244,18 +244,29 @@
 
         data.forEach(bache => {
     const fila = document.createElement('tr');
-    // Si quieres ver las coordenadas, accedemos al array de coordinates
-    const coords = bache.Ubicacion ? bache.Ubicacion.coordinates : [0,0];
+    fila.style.borderBottom = "1px solid #f1f1f1";
+
+    // 1. Validamos si existe la ubicación para evitar el error 'reading 1'
+    let textoUbicacion = "Sin coordenadas";
     
+    if (bache.Ubicacion && bache.Ubicacion.coordinates) {
+        const lng = bache.Ubicacion.coordinates[0];
+        const lat = bache.Ubicacion.coordinates[1];
+        textoUbicacion = `Lat: ${lat.toFixed(4)}, Lon: ${lng.toFixed(4)}`;
+    }
+
+    // 2. Pintamos la fila con seguridad
     fila.innerHTML = `
         <td class="py-4 text-dark fw-bold">${bache.Id_bache}</td>
-        <td class="text-muted">Lat: ${coords[1]}, Lon: ${coords[0]}</td>
+        <td class="text-muted">${textoUbicacion}</td>
         <td>
             <span class="badge ${bache.Valor_impacto > 7 ? 'bg-danger' : 'bg-warning'}">
-                ${bache.Valor_impacto}
+                ${bache.Valor_impacto || 0}
             </span>
         </td>
-        <td><button class="btn btn-sm btn-success rounded-pill">Ver Ruta</button></td>
+        <td>
+            <button class="btn btn-sm btn-outline-success rounded-pill">Ver Mapa</button>
+        </td>
     `;
     tabla.appendChild(fila);
 });
