@@ -229,6 +229,43 @@
 
 
 
+  // Función para decodificar formato EWKB (Extended Well-Known Binary) de PostGIS
+  function parseEWKBPoint(hexString) {
+      if (!hexString || typeof hexString !== 'string') return null;
+      try {
+          // Buscamos si es Little Endian ('01')
+          let littleEndian = hexString.substring(0, 2) === '01';
+          
+          let typeHex = hexString.substring(2, 10);
+          // SRID flag en EWKB es 0x20000000. Point es 1. Así que 20000001 (big endian) o 01000020 (little endian)
+          let hasSRID = typeHex === '01000020' || typeHex === '20000001'; 
+          
+          let offset = 10;
+          if (hasSRID) offset += 8; // Saltar el SRID de 4 bytes (8 caracteres hexadecimales)
+          
+          let xHex = hexString.substring(offset, offset + 16);
+          let yHex = hexString.substring(offset + 16, offset + 32);
+          
+          function hexToFloat64(hex) {
+              if (hex.length !== 16) return 0;
+              let bytes = new Uint8Array(8);
+              for (let i = 0; i < 8; i++) {
+                  bytes[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+              }
+              let view = new DataView(bytes.buffer);
+              return view.getFloat64(0, littleEndian);
+          }
+          
+          let lng = hexToFloat64(xHex);
+          let lat = hexToFloat64(yHex);
+          
+          return { lat, lng };
+      } catch(e) {
+          console.error("Error parseando EWKB:", e);
+          return null;
+      }
+  }
+
   async function cargarReportes() {
         const { data, error } = await supabaseClient
             .from('Bache') // Tu tabla con baches de Oaxaca
@@ -246,13 +283,22 @@
     const fila = document.createElement('tr');
     fila.style.borderBottom = "1px solid #f1f1f1";
 
-    // 1. Validamos si existe la ubicación para evitar el error 'reading 1'
     let textoUbicacion = "Sin coordenadas";
+    let botonMapaHtml = `<button class="btn btn-sm btn-outline-secondary rounded-pill" disabled>Ver Mapa</button>`;
     
-    if (bache.Ubicacion && bache.Ubicacion.coordinates) {
+    // Si la ubicación viene como texto binario hexadecimal de PostGIS
+    if (bache.Ubicacion && typeof bache.Ubicacion === 'string') {
+        const coords = parseEWKBPoint(bache.Ubicacion);
+        if (coords) {
+            textoUbicacion = `Lat: ${coords.lat.toFixed(4)}, Lon: ${coords.lng.toFixed(4)}`;
+            botonMapaHtml = `<a href="https://www.google.com/maps?q=${coords.lat},${coords.lng}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill">Ver Mapa</a>`;
+        }
+    } else if (bache.Ubicacion && bache.Ubicacion.coordinates) {
+        // Fallback por si la devuelven como GeoJSON de alguna forma
         const lng = bache.Ubicacion.coordinates[0];
         const lat = bache.Ubicacion.coordinates[1];
         textoUbicacion = `Lat: ${lat.toFixed(4)}, Lon: ${lng.toFixed(4)}`;
+        botonMapaHtml = `<a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill">Ver Mapa</a>`;
     }
 
     // 2. Pintamos la fila con seguridad
@@ -265,7 +311,7 @@
             </span>
         </td>
         <td>
-            <button class="btn btn-sm btn-outline-success rounded-pill">Ver Mapa</button>
+            ${botonMapaHtml}
         </td>
     `;
     tabla.appendChild(fila);

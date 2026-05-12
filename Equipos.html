@@ -446,8 +446,8 @@
                             <input type="email" class="form-control" id="teamEmail" placeholder="correo@ejemplo.com" required>
                         </div>
                         <div class="mb-3">
-                            <label for="teamDate" class="form-label">Fecha de Inicio / Calendario</label>
-                            <input type="date" class="form-control" id="teamDate" required>
+                            <label for="teamPassword" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="teamPassword" placeholder="******" required>
                         </div>
                         <button type="submit" class="save-team-btn">Registrar Equipo</button>
                     </form>
@@ -460,125 +460,185 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        let teamCount = 2;
+        const SUPABASE_URL = 'https://muhpuwittgecylwtixku.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_TCj4IljMPd_r9PMn_xLmIQ_ckANVu8H';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function assignReport(reportId) {
-            const card = document.getElementById(reportId);
-            const selector = card.querySelector('.team-selector');
-            const teamValue = selector.value;
+        // Parse EWKB function para decodificar las coordenadas de PostGIS
+        function parseEWKBPoint(hexString) {
+            if (!hexString || typeof hexString !== 'string') return null;
+            try {
+                let littleEndian = hexString.substring(0, 2) === '01';
+                let typeHex = hexString.substring(2, 10);
+                let hasSRID = typeHex === '01000020' || typeHex === '20000001'; 
+                let offset = 10;
+                if (hasSRID) offset += 8;
+                let xHex = hexString.substring(offset, offset + 16);
+                let yHex = hexString.substring(offset + 16, offset + 32);
+                function hexToFloat64(hex) {
+                    if (hex.length !== 16) return 0;
+                    let bytes = new Uint8Array(8);
+                    for (let i = 0; i < 8; i++) {
+                        bytes[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+                    }
+                    let view = new DataView(bytes.buffer);
+                    return view.getFloat64(0, littleEndian);
+                }
+                return { lat: hexToFloat64(yHex), lng: hexToFloat64(xHex) };
+            } catch(e) {
+                return null;
+            }
+        }
 
-            if (teamValue === 'Asignar a...') {
+        let equiposData = [];
+        
+        async function init() {
+            await cargarEquipos();
+            await cargarBaches();
+        }
+
+        async function cargarEquipos() {
+            const { data, error } = await supabaseClient.from('Usuario').select('*').eq('Rol', 'Contratista');
+            if (error) { console.error('Error cargando equipos:', error); return; }
+            
+            equiposData = data;
+            const grid = document.getElementById('teams-grid');
+            grid.innerHTML = '';
+            
+            data.forEach(equipo => {
+                grid.innerHTML += `
+                    <div class="team-card" id="team-${equipo.Id_usuario}">
+                        <div class="team-header">
+                            <h4>${equipo.Nombre}</h4>
+                        </div>
+                        <p class="text-muted small mb-2">Tareas Asignadas:</p>
+                        <div class="assigned-list" id="list-${equipo.Id_usuario}">
+                            <p class="text-muted text-center py-3 m-0" style="font-size: 0.8rem;">Sin tareas</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function cargarBaches() {
+            const { data, error } = await supabaseClient.from('Bache').select('*');
+            if (error) { console.error('Error cargando baches:', error); return; }
+            
+            const pendingScroll = document.getElementById('pending-scroll');
+            pendingScroll.innerHTML = '';
+            
+            // Limpiar tareas de los equipos existentes
+            equiposData.forEach(eq => {
+                const list = document.getElementById('list-' + eq.Id_usuario);
+                if (list) list.innerHTML = '<p class="text-muted text-center py-3 m-0" style="font-size: 0.8rem;">Sin tareas</p>';
+            });
+
+            // Opciones del selector
+            let options = '<option selected disabled>Asignar a...</option>';
+            equiposData.forEach(eq => {
+                options += `<option value="${eq.Id_usuario}">${eq.Nombre}</option>`;
+            });
+
+            data.forEach(bache => {
+                let ubicacionStr = "Sin ubicación";
+                if (bache.Ubicacion) {
+                    const coords = parseEWKBPoint(bache.Ubicacion);
+                    if (coords) ubicacionStr = `Lat: ${coords.lat.toFixed(4)}, Lon: ${coords.lng.toFixed(4)}`;
+                }
+
+                if (bache.Id_usuario_asignado) {
+                    // Asignado
+                    const targetList = document.getElementById('list-' + bache.Id_usuario_asignado);
+                    if (targetList) {
+                        if (targetList.querySelector('p')) targetList.innerHTML = ''; // Quitar "Sin tareas"
+                        targetList.innerHTML += `
+                            <div class="assigned-item" id="assigned-${bache.Id_bache}">
+                                <span>Bache #${bache.Id_bache}</span>
+                                <span class="remove-btn" onclick="unassignTask(${bache.Id_bache})" title="Regresar a pendientes">✕</span>
+                            </div>
+                        `;
+                    }
+                } else {
+                    // Pendiente
+                    pendingScroll.innerHTML += `
+                        <div class="pending-card" id="rep-${bache.Id_bache}">
+                            <h6>Bache #${bache.Id_bache}</h6>
+                            <p>Gravedad: ${bache.Valor_impacto || 0} <br> Ubicación: <span style="font-size: 0.8em">${ubicacionStr}</span></p>
+                            <select class="form-select form-select-sm mb-2 team-selector" id="sel-${bache.Id_bache}">
+                                ${options}
+                            </select>
+                            <button class="assign-btn w-100" onclick="assignReport(${bache.Id_bache})">Confirmar Asignación</button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        async function assignReport(bacheId) {
+            const sel = document.getElementById('sel-' + bacheId);
+            const teamId = sel.value;
+            if (teamId === 'Asignar a...') {
                 alert('Por favor selecciona un equipo.');
                 return;
             }
 
-            const location = card.getAttribute('data-location');
-            const severity = card.getAttribute('data-severity');
-            const time = card.getAttribute('data-time');
-
-            const targetList = document.getElementById('list-' + teamValue);
-
-            // Limpiar mensaje de "Sin tareas"
-            if (targetList.querySelector('p')) targetList.innerHTML = '';
-
-            // Crear item asignado
-            const newItem = document.createElement('div');
-            newItem.className = 'assigned-item';
-            newItem.innerHTML = `
-                <span>${location}</span>
-                <span class="remove-btn" onclick="unassignTask(this, '${teamValue}', '${reportId}', '${location}', '${severity}', '${time}')" title="Regresar a pendientes">✕</span>
-            `;
-
-            targetList.appendChild(newItem);
-
-            // Eliminar de pendientes con animación
-            card.style.opacity = '0';
-            card.style.transform = 'scale(0.8)';
-            setTimeout(() => card.remove(), 300);
-        }
-
-        function unassignTask(btn, teamId, reportId, location, severity, time) {
-            // Eliminar de la lista del equipo
-            const list = document.getElementById('list-' + teamId);
-            btn.parentElement.remove();
-            if (list.children.length === 0) {
-                list.innerHTML = '<p class="text-muted text-center py-3 m-0" style="font-size: 0.8rem;">Sin tareas</p>';
+            const { error } = await supabaseClient.from('Bache').update({ Id_usuario_asignado: parseInt(teamId) }).eq('Id_bache', bacheId);
+            if (error) {
+                alert('Error al asignar tarea');
+                console.error(error);
+                return;
             }
-
-            // Regresar a la lista de pendientes
-            const pendingScroll = document.getElementById('pending-scroll');
-            const newCard = document.createElement('div');
-            newCard.className = 'pending-card';
-            newCard.id = reportId;
-            newCard.setAttribute('data-location', location);
-            newCard.setAttribute('data-severity', severity);
-            newCard.setAttribute('data-time', time);
-            
-            // Reconstruir el selector (incluyendo equipos nuevos)
-            let options = '<option selected disabled>Asignar a...</option>';
-            document.querySelectorAll('.team-card').forEach(tc => {
-                const id = tc.id.replace('team-', '');
-                const name = tc.querySelector('h4').innerText;
-                options += `<option value="${id}">${name}</option>`;
-            });
-
-            newCard.innerHTML = `
-                <h6>Bache - ${location.split('#')[0]}</h6>
-                <p>Gravedad: ${severity} <br> Reportado: ${time}</p>
-                <select class="form-select form-select-sm mb-2 team-selector">
-                    ${options}
-                </select>
-                <button class="assign-btn w-100" onclick="assignReport('${reportId}')">Confirmar Asignación</button>
-            `;
-            pendingScroll.appendChild(newCard);
+            cargarBaches();
         }
 
-        document.getElementById('addTeamForm').addEventListener('submit', function(e) {
+        async function unassignTask(bacheId) {
+            const { error } = await supabaseClient.from('Bache').update({ Id_usuario_asignado: null }).eq('Id_bache', bacheId);
+            if (error) {
+                alert('Error al desasignar tarea');
+                console.error(error);
+                return;
+            }
+            cargarBaches();
+        }
+
+        document.getElementById('addTeamForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const name = document.getElementById('teamName').value;
-            addNewTeam(name);
-            
-            // Cerrar modal y limpiar form
+            const email = document.getElementById('teamEmail').value;
+            const password = document.getElementById('teamPassword').value;
+
+            // Alerta de carga o deshabilitar botón (opcional)
+            const btn = document.querySelector('.save-team-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Registrando...';
+            btn.disabled = true;
+
+            const { data, error } = await supabaseClient.from('Usuario').insert([{
+                Nombre: name,
+                Rol: 'Contratista',
+                Correo_electronico: email,
+                Contrasenia: password
+            }]);
+
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+
+            if (error) {
+                alert('Error al registrar equipo: ' + error.message);
+                console.error(error);
+                return;
+            }
+
             const modal = bootstrap.Modal.getInstance(document.getElementById('addTeamModal'));
             modal.hide();
             this.reset();
+            
+            await cargarEquipos();
+            await cargarBaches();
         });
 
-        function addNewTeam(customName) {
-            teamCount++;
-            const grid = document.getElementById('teams-grid');
-            const teamId = 'custom-' + teamCount;
-            const teamName = customName || ('Equipo ' + teamCount);
-
-            const newTeam = document.createElement('div');
-            newTeam.className = 'team-card';
-            newTeam.id = 'team-' + teamId;
-            newTeam.innerHTML = `
-                <div class="team-header">
-                    <h4>${teamName}</h4>
-                </div>
-                <p class="text-muted small mb-2">Tareas Asignadas:</p>
-                <div class="assigned-list" id="list-${teamId}">
-                    <p class="text-muted text-center py-3 m-0" style="font-size: 0.8rem;">Sin tareas</p>
-                </div>
-            `;
-            grid.appendChild(newTeam);
-
-            // Actualizar todos los selectores existentes
-            document.querySelectorAll('.team-selector').forEach(sel => {
-                const opt = document.createElement('option');
-                opt.value = teamId;
-                opt.text = teamName;
-                sel.add(opt);
-            });
-        }
+        document.addEventListener('DOMContentLoaded', init);
     </script>
-    <script>
-  const SUPABASE_URL = 'https://muhpuwittgecylwtixku.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_TCj4IljMPd_r9PMn_xLmIQ_ckANVu8H';
-  // Esta variable 'supabase' es la que usarás para todo
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-</script>
 
 </body>
 
