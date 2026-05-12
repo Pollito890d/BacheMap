@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BacheMap - Panel Principal</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-green: #52AD5F;
+            --dark-green: #3e8e4a;
+            --bg-light: #f0f4f1;
+            --glass: rgba(255, 255, 255, 0.85);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Outfit', sans-serif;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Navbar Styles */
+        .nav {
+            background-color: var(--primary-green);
+            padding: 12px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-link {
+            color: #f0f4f1 !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #ffffff !important;
+            transform: translateY(-2px);
+        }
+
+        .logout-icon img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }
+
+        /* Main Layout */
+        .main-container {
+            padding: 40px 0;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        /* Image Section */
+        .hero-image-container {
+            position: sticky;
+            top: 100px;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            height: 500px;
+            background: #dfe6e9;
+        }
+
+        .hero-image-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 30px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+            color: white;
+            pointer-events: none; /* Permite interactuar con el mapa debajo */
+        }
+
+        /* Notifications Section */
+        .notifications-list {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: var(--shadow);
+        }
+
+        .list-header {
+            margin-bottom: 25px;
+            border-bottom: 2px solid rgba(82, 173, 95, 0.2);
+            padding-bottom: 15px;
+        }
+
+        .report-item {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            border-left: 5px solid var(--primary-green);
+        }
+
+        .report-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .report-details h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: #2d3436;
+        }
+
+        .report-details p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #636e72;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-weight: 600;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #ffeaa7;
+            color: #d6a312;
+        }
+
+        .status-fixed {
+            background: #55efc4;
+            color: #00b894;
+            display: none;
+        }
+
+        /* Checkbox */
+        .check-container {
+            padding-left: 20px;
+        }
+
+        .custom-check {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            appearance: none;
+            border: 2px solid var(--primary-green);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .custom-check:checked {
+            background-color: var(--primary-green);
+        }
+
+        .custom-check:checked::after {
+            content: '✓';
+            color: white;
+            font-size: 18px;
+        }
+
+        /* Fixed State */
+        .report-item.is-fixed {
+            opacity: 0.6;
+            border-left-color: #b2bec3;
+        }
+
+        .report-item.is-fixed .status-pending {
+            display: none;
+        }
+
+        .report-item.is-fixed .status-fixed {
+            display: inline-block;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-image-container {
+                position: relative;
+                top: 0;
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <ul class="nav px-4 align-items-center">
+        <li class="nav-item">
+            <a class="nav-link text-danger" href="Principal.html" title="Pagina Principal">
+                <span class="logout-icon"><img src="home.png" alt="Inicio"></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="Reportes.html">Reportes</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="Equipos.html">Equipos</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="Notificaciones.html">Notificaciones</a>
+        </li>
+        <li class="nav-item ms-auto">
+            <a class="nav-link text-danger" href="Login.html" title="Cerrar Sesión">
+                <span class="logout-icon"><img src="user.png" alt="Perfil"></span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="container main-container">
+        <div class="dashboard-grid">
+
+            <!-- Columna del Mapa Interactivo -->
+            <div class="hero-image-container">
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d61005.15843472093!2d-96.75618496464842!3d17.065842823616684!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85c722eb52932f47%3A0xc71039f3751a070!2sOaxaca%20de%20Ju%C3%A1rez%2C%20Oax.!5e0!3m2!1ses-419!2smx!4v1715494000000!5m2!1ses-419!2smx" 
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+                <div class="image-overlay">
+                    <h5 class="m-0">Mapa de Reportes en Tiempo Real</h5>
+                </div>
+            </div>
+
+            <!-- Columna de Notificaciones -->
+            <div class="notifications-list">
+                <div class="list-header">
+                    <h3 class="fw-bold">Reportes Recientes</h3>
+
+                </div>
+
+                <div class="report-item" id="r1">
+                    <div class="report-details">
+                        <h4>Av. Juárez #450</h4>
+                        <p><strong>Gravedad:</strong> Alta</p>
+                        <p><strong>Fecha:</strong> 11/05/2026</p>
+                        <span class="status-badge status-pending">Pendiente</span>
+                        <span class="status-badge status-fixed">Arreglado</span>
+                    </div>
+                    <div class="check-container">
+                        <input type="checkbox" class="custom-check" onchange="markFixed('r1')">
+                    </div>
+                </div>
+
+                <div class="report-item" id="r2">
+                    <div class="report-details">
+                        <h4>Calle Morelos, Col. Centro</h4>
+                        <p><strong>Gravedad:</strong> Media </p>
+                        <p><strong>Fecha:</strong> 10/07/2026</p>
+                        <span class="status-badge status-pending">Pendiente</span>
+                        <span class="status-badge status-fixed">Arreglado</span>
+                    </div>
+                    <div class="check-container">
+                        <input type="checkbox" class="custom-check" onchange="markFixed('r2')">
+                    </div>
+                </div>
+
+                <div class="report-item" id="r3">
+                    <div class="report-details">
+                        <h4>Boulevard Solidaridad KM 3</h4>
+                        <p><strong>Gravedad:</strong> Crítica</p>
+                        <p><strong>Fecha:</strong> 08/05/2026</p>
+                        <span class="status-badge status-pending">Pendiente</span>
+                        <span class="status-badge status-fixed">Arreglado</span>
+                    </div>
+                    <div class="check-container">
+                        <input type="checkbox" class="custom-check" onchange="markFixed('r3')">
+                    </div>
+                </div>
+
+                <div class="report-item" id="r4">
+                    <div class="report-details">
+                        <h4>Calle 5 de Mayo</h4>
+                        <p><strong>Gravedad:</strong> Baja </p>
+                        <p><strong>Fecha:</strong> 05/05/2026</p>
+                        <span class="status-badge status-pending">Pendiente</span>
+                        <span class="status-badge status-fixed">Arreglado</span>
+                    </div>
+                    <div class="check-container">
+                        <input type="checkbox" class="custom-check" onchange="markFixed('r4')">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function markFixed(id) {
+            const item = document.getElementById(id);
+            const check = item.querySelector('.custom-check');
+            if (check.checked) {
+                item.classList.add('is-fixed');
+            } else {
+                item.classList.remove('is-fixed');
+            }
+        }
+    </script>
+
+</body>
+
+</html>

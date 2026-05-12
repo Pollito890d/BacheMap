@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BacheMap - Gestión de Equipos</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-green: #52AD5F;
+            --dark-green: #3e8e4a;
+            --bg-light: #f0f4f1;
+            --glass: rgba(255, 255, 255, 0.85);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Outfit', sans-serif;
+            color: #333;
+        }
+
+        /* Navbar Styles */
+        .nav {
+            background-color: var(--primary-green);
+            padding: 12px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-link {
+            color: #f0f4f1 !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #ffffff !important;
+            transform: translateY(-2px);
+        }
+
+        .logout-icon img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }
+
+        /* Dashboard Container */
+        .main-container {
+            padding: 40px 0;
+        }
+
+        .section-title {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title span {
+            background: var(--primary-green);
+            width: 8px;
+            height: 30px;
+            border-radius: 4px;
+        }
+
+        /* Assignment Layout */
+        .assignment-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+        }
+
+        /* Sidebar: Pending Reports */
+        .pending-reports-panel {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: var(--shadow);
+            height: calc(100vh - 180px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .reports-scroll {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 5px;
+        }
+
+        .reports-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .reports-scroll::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .pending-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #f1c40f;
+            transition: transform 0.3s ease;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pending-card h6 {
+            margin-bottom: 5px;
+            font-weight: 700;
+            color: #2d3436;
+        }
+
+        .pending-card p {
+            font-size: 0.85rem;
+            color: #636e72;
+            margin-bottom: 10px;
+        }
+
+        /* Teams Section */
+        .teams-header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .teams-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .team-card {
+            background: white;
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border-top: 6px solid var(--primary-green);
+            transition: all 0.3s ease;
+        }
+
+        .team-card:hover {
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.1);
+        }
+
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .team-header h4 {
+            margin: 0;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .assigned-list {
+            min-height: 100px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            border: 2px dashed #dee2e6;
+        }
+
+        .assigned-item {
+            background: white;
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .remove-btn {
+            color: #ff7675;
+            cursor: pointer;
+            transition: color 0.3s;
+            font-weight: bold;
+        }
+
+        .remove-btn:hover {
+            color: #d63031;
+        }
+
+        /* Buttons */
+        .assign-btn {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .assign-btn:hover {
+            background: var(--dark-green);
+            transform: translateY(-2px);
+        }
+
+        .add-team-btn {
+            background: #2d3436;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-team-btn:hover {
+            background: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Modal Styles */
+        .modal-content {
+            border-radius: 25px;
+            border: none;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .modal-header {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 20px 30px;
+        }
+
+        .modal-body {
+            padding: 30px;
+            background: var(--bg-light);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            border-radius: 12px;
+            padding: 12px 15px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 0.25rem rgba(82, 173, 95, 0.1);
+        }
+
+        .form-control:disabled {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+
+        .save-team-btn {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            font-weight: 700;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .save-team-btn:hover {
+            background: var(--dark-green);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 992px) {
+            .assignment-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pending-reports-panel {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <ul class="nav px-4 align-items-center">
+        <li class="nav-item">
+            <a class="nav-link text-danger" href="Principal.html" title="Pagina Principal">
+                <span class="logout-icon"><img src="home.png" alt="Inicio"></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="Reportes.html">Reportes</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="Equipos.html">Equipos</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="Notificaciones.html">Notificaciones</a>
+        </li>
+        <li class="nav-item ms-auto">
+            <a class="nav-link text-danger" href="Login.html" title="Cerrar Sesión">
+                <span class="logout-icon"><img src="user.png" alt="Perfil"></span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="container main-container">
+
+        <div class="assignment-grid">
+
+            <!-- Panel Izquierdo: Reportes Pendientes -->
+            <div class="pending-reports-panel">
+                <h5 class="section-title"><span></span> Reportes Pendientes</h5>
+                <div class="reports-scroll" id="pending-scroll">
+
+                    <div class="pending-card" id="rep-101" data-location="Av. Juárez #450" data-severity="Alta" data-time="Hace 1h">
+                        <h6>Bache #101 - Av. Juárez</h6>
+                        <p>Gravedad: Alta <br> Reportado: Hace 1h</p>
+                        <select class="form-select form-select-sm mb-2 team-selector">
+                            <option selected disabled>Asignar a...</option>
+                            <option value="alpha">Equipo 1</option>
+                            <option value="beta">Equipo 2</option>
+                            <option value="gamma">Equipo 3</option>
+                        </select>
+                        <button class="assign-btn w-100" onclick="assignReport('rep-101')">Confirmar Asignación</button>
+                    </div>
+
+                    <div class="pending-card" id="rep-102" data-location="Calle Morelos #12" data-severity="Media" data-time="Hace 3h">
+                        <h6>Bache #102 - Calle Morelos</h6>
+                        <p>Gravedad: Media <br> Reportado: Hace 3h</p>
+                        <select class="form-select form-select-sm mb-2 team-selector">
+                            <option selected disabled>Asignar a...</option>
+                            <option value="alpha">Equipo 1</option>
+                            <option value="beta">Equipo 2</option>
+                            <option value="gamma">Equipo 3</option>
+                        </select>
+                        <button class="assign-btn w-100" onclick="assignReport('rep-102')">Confirmar Asignación</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Panel Derecho: Equipos de Trabajo -->
+            <div class="teams-view">
+                <div class="teams-header-area">
+                    <h3 class="section-title m-0"><span></span> Equipos de Mantenimiento</h3>
+                    <button class="add-team-btn" data-bs-toggle="modal" data-bs-target="#addTeamModal">
+                        <span>+</span> Agregar Equipo
+                    </button>
+                </div>
+
+                <div class="teams-container" id="teams-grid">
+
+                    <!-- Equipo 1 -->
+                    <div class="team-card" id="team-alpha">
+                        <div class="team-header">
+                            <h4>Equipo 1</h4>
+                        </div>
+                        <p class="text-muted small mb-2">Tareas Asignadas:</p>
+                        <div class="assigned-list" id="list-alpha">
+                            <p class="text-muted text-center py-3 m-0" style="font-size: 0.8rem;">Sin tareas</p>
+                        </div>
+                    </div>
+
+                    <!-- Equipo 2 -->
+                    <div class="team-card" id="team-beta">
+                        <div class="team-header">
+                            <h4>Equipo 2</h4>
+                        </div>
+                        <p class="text-muted small mb-2">Tareas Asignadas:</p>
+                        <div class="assigned-list" id="list-beta">
+                            <p class="text-muted text-center py-3 m-0" style="font-size: 0.8rem;">Sin tareas</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal para Agregar Equipo -->
+    <div class="modal fade" id="addTeamModal" tabindex="-1" aria-labelledby="addTeamModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="addTeamModalLabel">Nuevo Equipo de Mantenimiento</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addTeamForm">
+                        <div class="mb-3">
+                            <label for="teamName" class="form-label">Nombre del Equipo</label>
+                            <input type="text" class="form-control" id="teamName" placeholder="Ej. Equipo Delta" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="teamRole" class="form-label">Rol</label>
+                            <input type="text" class="form-control" id="teamRole" value="Contratista" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="teamEmail" class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" id="teamEmail" placeholder="correo@ejemplo.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="teamDate" class="form-label">Fecha de Inicio / Calendario</label>
+                            <input type="date" class="form-control" id="teamDate" required>
+                        </div>
+                        <button type="submit" class="save-team-btn">Registrar Equipo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let teamCount = 2;
+
+        function assignReport(reportId) {
+            const card = document.getElementById(reportId);
+            const selector = card.querySelector('.team-selector');
+            const teamValue = selector.value;
+
+            if (teamValue === 'Asignar a...') {
+                alert('Por favor selecciona un equipo.');
+                return;
+            }
+
+            const location = card.getAttribute('data-location');
+            const severity = card.getAttribute('data-severity');
+            const time = card.getAttribute('data-time');
+
+            const targetList = document.getElementById('list-' + teamValue);
+
+            // Limpiar mensaje de "Sin tareas"
+            if (targetList.querySelector('p')) targetList.innerHTML = '';
+
+            // Crear item asignado
+            const newItem = document.createElement('div');
+            newItem.className = 'assigned-item';
+            newItem.innerHTML = `
+                <span>${location}</span>
+                <span class="remove-btn" onclick="unassignTask(this, '${teamValue}', '${reportId}', '${location}', '${severity}', '${time}')" title="Regresar a pendientes">✕</span>
+            `;
+
+            targetList.appendChild(newItem);
+
+            // Eliminar de pendientes con animación
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.8)';
+            setTimeout(() => card.remove(), 300);
+        }
+
+        function unassignTask(btn, teamId, reportId, location, severity, time) {
+            // Eliminar de la lista del equipo
+            const list = document.getElementById('list-' + teamId);
+            btn.parentElement.remove();
+            if (list.children.length === 0) {
+                list.innerHTML = '<p class="text-muted text-center py-3 m-0" style="font-size: 0.8rem;">Sin tareas</p>';
+            }
+
+            // Regresar a la lista de pendientes
+            const pendingScroll = document.getElementById('pending-scroll');
+            const newCard = document.createElement('div');
+            newCard.className = 'pending-card';
+            newCard.id = reportId;
+            newCard.setAttribute('data-location', location);
+            newCard.setAttribute('data-severity', severity);
+            newCard.setAttribute('data-time', time);
+            
+            // Reconstruir el selector (incluyendo equipos nuevos)
+            let options = '<option selected disabled>Asignar a...</option>';
+            document.querySelectorAll('.team-card').forEach(tc => {
+                const id = tc.id.replace('team-', '');
+                const name = tc.querySelector('h4').innerText;
+                options += `<option value="${id}">${name}</option>`;
+            });
+
+            newCard.innerHTML = `
+                <h6>Bache - ${location.split('#')[0]}</h6>
+                <p>Gravedad: ${severity} <br> Reportado: ${time}</p>
+                <select class="form-select form-select-sm mb-2 team-selector">
+                    ${options}
+                </select>
+                <button class="assign-btn w-100" onclick="assignReport('${reportId}')">Confirmar Asignación</button>
+            `;
+            pendingScroll.appendChild(newCard);
+        }
+
+        document.getElementById('addTeamForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('teamName').value;
+            addNewTeam(name);
+            
+            // Cerrar modal y limpiar form
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addTeamModal'));
+            modal.hide();
+            this.reset();
+        });
+
+        function addNewTeam(customName) {
+            teamCount++;
+            const grid = document.getElementById('teams-grid');
+            const teamId = 'custom-' + teamCount;
+            const teamName = customName || ('Equipo ' + teamCount);
+
+            const newTeam = document.createElement('div');
+            newTeam.className = 'team-card';
+            newTeam.id = 'team-' + teamId;
+            newTeam.innerHTML = `
+                <div class="team-header">
+                    <h4>${teamName}</h4>
+                </div>
+                <p class="text-muted small mb-2">Tareas Asignadas:</p>
+                <div class="assigned-list" id="list-${teamId}">
+                    <p class="text-muted text-center py-3 m-0" style="font-size: 0.8rem;">Sin tareas</p>
+                </div>
+            `;
+            grid.appendChild(newTeam);
+
+            // Actualizar todos los selectores existentes
+            document.querySelectorAll('.team-selector').forEach(sel => {
+                const opt = document.createElement('option');
+                opt.value = teamId;
+                opt.text = teamName;
+                sel.add(opt);
+            });
+        }
+    </script>
+
+</body>
+
+</html>

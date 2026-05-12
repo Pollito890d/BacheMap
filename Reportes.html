@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BacheMap-Reportes</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f4f1;
+        }
+
+        /* Estilos de la barra de navegación */
+        .nav {
+            background-color: #52AD5F;
+            padding: 10px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            /* Le da un toque sutil de profundidad */
+        }
+
+        .nav-link {
+            color: #f0f4f1 !important;
+            /* Letras negras */
+            font-weight: 500;
+            /* Letra un poco más gruesa para que resalte */
+        }
+
+        .nav-link:hover {
+            color: #ffffff !important;
+        }
+
+        /* Ajustar el tamaño del icono de la barra de navegación */
+        .logout-icon img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            /* Esto asegura que la imagen completa quepa sin recortarse */
+            margin-top: -4px;
+            /* Ajuste para mantenerlo alineado */
+            filter: brightness(0) invert(1);
+            /* Convierte el icono a color blanco */
+        }
+    </style>
+</head>
+
+<body>
+
+    <ul class="nav px-4 align-items-center">
+        <li class="nav-item">
+            <!-- El enlace te puede llevar al Login.html, usa text-danger para darle color rojo si gustas -->
+            <a class="nav-link text-danger" href="Principal.html" title="Pagina Principal">
+                <!-- Espacio listo para poner el icono de Cerrar Sesión (puedes usar un <img> o un <i> de FontAwesome/Bootstrap Icons) -->
+                <span class="logout-icon"><img src="home.png" alt="Perfil" class="profile-img"></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="Reportes.html">Reportes</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="Equipos.html">Equipos</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="Notificaciones.html">Notificaciones</a>
+        </li>
+        <li class="nav-item ms-auto">
+            <!-- El enlace te puede llevar al Login.html, usa text-danger para darle color rojo si gustas -->
+            <a class="nav-link text-danger" href="Login.html" title="Cerrar Sesión">
+                <!-- Espacio listo para poner el icono de Cerrar Sesión (puedes usar un <img> o un <i> de FontAwesome/Bootstrap Icons) -->
+                <span class="logout-icon"><img src="user.png" alt="Perfil" class="profile-img"></span>
+            </a>
+        </li>
+    </ul>
+
+    <!-- Contenedor general centrado -->
+    <div class="container mt-5">
+
+        <!-- Tarjeta de Búsqueda -->
+        <div class="card shadow-sm border-0 rounded-4 mb-4" style="background-color: white;">
+            <div class="card-body d-flex justify-content-center align-items-center gap-3 py-4">
+                <label class="fw-bold fs-5 mb-0 text-muted">Buscar Reporte:</label>
+                <input type="text" class="form-control rounded-pill border-1 shadow-none"
+                    style="width: 350px; border-color: #ddd; padding: 10px 20px; outline: none; transition: border-color 0.3s;"
+                    onfocus="this.style.borderColor='#52AD5F'" onblur="this.style.borderColor='#ddd'"
+                    placeholder="Escribe aquí para buscar...">
+                <button class="btn rounded-pill fw-bold px-4"
+                    style="background-color: #52AD5F; color: white; padding: 10px 25px; transition: background-color 0.3s;"
+                    onmouseover="this.style.backgroundColor='#3e8e4a'"
+                    onmouseout="this.style.backgroundColor='#52AD5F'">
+                    Buscar
+                </button>
+            </div>
+        </div>
+
+        <!-- Tarjeta de la Tabla -->
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden" style="background-color: white;">
+            <div class="table-responsive">
+                <table class="table table-hover table-borderless text-center align-middle mb-0">
+                    <thead style="background-color: #f8f9fa; border-bottom: 2px solid #eaeaea;">
+                        <tr>
+                            <th class="fw-semibold text-secondary p-3">ID reporte</th>
+                            <th class="fw-semibold text-secondary p-3">Ubicación</th>
+                            <th class="fw-semibold text-secondary p-3">Severidad estimada</th>
+                            <th class="fw-semibold text-secondary p-3">Ruta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Filas vacías con diseño sutil -->
+                        <tr style="border-bottom: 1px solid #f1f1f1;">
+                            <td class="py-4 text-muted">--</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f1f1;">
+                            <td class="py-4 text-muted">--</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f1f1;">
+                            <td class="py-4 text-muted">--</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="py-4 text-muted">--</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sección de Gráfico Único Dinámico -->
+        <h4 class="fw-bold mt-5 mb-4 text-dark text-center">Análisis de Reportes por Ruta</h4>
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card shadow-sm border-0 rounded-4 p-4" style="background-color: white;">
+
+                    <!-- Botones de Control de Tiempo -->
+                    <div class="d-flex justify-content-center gap-2 mb-4 flex-wrap">
+                        <button class="btn btn-outline-dark rounded-pill fw-bold active"
+                            onclick="updateChart('semanal', this)">Semanal</button>
+                        <button class="btn btn-outline-dark rounded-pill fw-bold"
+                            onclick="updateChart('mensual', this)">Mensual</button>
+                        <button class="btn btn-outline-dark rounded-pill fw-bold"
+                            onclick="updateChart('trimestral', this)">Trimestral</button>
+                        <button class="btn btn-outline-dark rounded-pill fw-bold"
+                            onclick="updateChart('anual', this)">Anual</button>
+                    </div>
+
+                    <!-- Lienzo del Gráfico -->
+                    <div style="position: relative; height: 350px; width: 100%;">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script de Chart.js para generar los gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Colores súper vivos (Rojo, Azul, Verde, Naranja)
+        const vividColors = ['#FF2A2A', '#007BFF', '#00E640', '#FF9900'];
+        const rutas = ['Ruta Norte', 'Ruta Sur', 'Ruta Centro', 'Ruta Oriente'];
+
+        // Datos para cada periodo de tiempo
+        const chartData = {
+            semanal: [5, 8, 3, 6],
+            mensual: [25, 38, 15, 30],
+            trimestral: [80, 120, 45, 95],
+            anual: [340, 450, 210, 390]
+        };
+
+        // Crear el gráfico principal (Barras Horizontales)
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        let myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: rutas,
+                datasets: [{
+                    label: 'Reportes',
+                    data: chartData.semanal,
+                    backgroundColor: vividColors,
+                    borderRadius: 6, // Hace que las puntas de las barras sean redonditas
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                indexAxis: 'y', // Propiedad clave para que sea horizontal
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false } // Ocultamos la leyenda para que se vea más limpio
+                },
+                scales: {
+                    x: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Función para cambiar los datos cuando se presiona un botón
+        function updateChart(period, btnElement) {
+            // 1. Actualizar los datos del gráfico con animación
+            myChart.data.datasets[0].data = chartData[period];
+            myChart.update();
+
+            // 2. Quitar el estado 'active' de todos los botones
+            const buttons = document.querySelectorAll('.btn-outline-dark');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // 3. Poner el estado 'active' al botón que se acaba de presionar
+            btnElement.classList.add('active');
+        }
+    </script>
+</body>
+
+</html>
